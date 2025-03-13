@@ -1,24 +1,243 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página Principal</title>
+    <title>Codexp - Blox Fruits</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Referências PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a2a6c">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar se o usuário está logado
+            const loggedIn = localStorage.getItem('loggedIn') === 'true';
+            const currentUser = localStorage.getItem('currentUser');
+            const loginLink = document.getElementById('login-link');
+            const logoutBtn = document.getElementById('logout-btn');
+            const userDisplay = document.getElementById('user-display');
+            const loginMenuLink = document.getElementById('login-menu-link');
+            
+            // Atualizar a interface com base no status de login
+            if (loggedIn && currentUser) {
+                if (loginLink) loginLink.style.display = 'none';
+                if (loginMenuLink) loginMenuLink.style.display = 'none';
+                logoutBtn.style.display = 'inline-block';
+                userDisplay.textContent = `Olá, ${currentUser}!`;
+                userDisplay.style.display = 'inline-block';
+            } else {
+                if (loginLink) loginLink.style.display = 'inline-block';
+                if (loginMenuLink) loginMenuLink.style.display = 'flex';
+                logoutBtn.style.display = 'none';
+                userDisplay.style.display = 'none';
+            }
+            
+            // Função de logout
+            logoutBtn.addEventListener('click', function() {
+                localStorage.removeItem('loggedIn');
+                localStorage.removeItem('currentUser');
+                alert('Logout realizado com sucesso!');
+                window.location.reload();
+            });
+
+            // Inicializar tema
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            
+            // Alternar tema
+            const themeToggle = document.getElementById('theme-toggle');
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+            
+            // Inicializar estatísticas
+            updateStats();
+            
+            // Inicializar notificações
+            initNotifications();
+        });
+        
+        // Função para atualizar estatísticas
+        function updateStats() {
+            const savedCodes = JSON.parse(localStorage.getItem('savedCodes')) || [];
+            const totalCodes = savedCodes.length;
+            const activeCodes = savedCodes.filter(code => !code.expiry || !code.expiry.toLowerCase().includes('expirado')).length;
+            const expiredCodes = totalCodes - activeCodes;
+            
+            document.getElementById('total-codes').textContent = totalCodes;
+            document.getElementById('active-codes').textContent = activeCodes;
+            document.getElementById('expired-codes').textContent = expiredCodes;
+            
+            // Calcular recompensas mais comuns
+            const rewards = {};
+            savedCodes.forEach(code => {
+                const rewardText = code.reward.toLowerCase();
+                if (rewardText.includes('beli')) rewards.beli = (rewards.beli || 0) + 1;
+                if (rewardText.includes('xp') || rewardText.includes('experiência')) rewards.xp = (rewards.xp || 0) + 1;
+                if (rewardText.includes('gem')) rewards.gems = (rewards.gems || 0) + 1;
+            });
+            
+            document.getElementById('beli-rewards').textContent = rewards.beli || 0;
+            document.getElementById('xp-rewards').textContent = rewards.xp || 0;
+            document.getElementById('gem-rewards').textContent = rewards.gems || 0;
+        }
+        
+        // Função para inicializar notificações
+        function initNotifications() {
+            const notificationToggle = document.getElementById('notification-toggle');
+            const notificationCenter = document.getElementById('notification-center');
+            const notificationClose = document.getElementById('notification-close');
+            const notificationList = document.getElementById('notification-list');
+            const notificationBadge = document.getElementById('notification-badge');
+            
+            // Carregar notificações do localStorage
+            let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+            
+            // Adicionar notificações de exemplo se não houver nenhuma
+            if (notifications.length === 0) {
+                notifications = [
+                    {
+                        id: 1,
+                        title: 'Bem-vindo ao Codexp!',
+                        message: 'Agora você pode gerenciar seus códigos do Blox Fruits de forma mais eficiente.',
+                        time: new Date().toISOString(),
+                        read: false
+                    },
+                    {
+                        id: 2,
+                        title: 'Novos recursos disponíveis',
+                        message: 'Confira o modo escuro e o sistema de compartilhamento de códigos!',
+                        time: new Date().toISOString(),
+                        read: false
+                    }
+                ];
+                localStorage.setItem('notifications', JSON.stringify(notifications));
+            }
+            
+            // Atualizar badge de notificações
+            updateNotificationBadge();
+            
+            // Abrir/fechar centro de notificações
+            notificationToggle.addEventListener('click', function() {
+                if (notificationCenter.style.display === 'block') {
+                    notificationCenter.style.display = 'none';
+                } else {
+                    notificationCenter.style.display = 'block';
+                    renderNotifications();
+                }
+            });
+            
+            notificationClose.addEventListener('click', function() {
+                notificationCenter.style.display = 'none';
+            });
+            
+            // Função para renderizar notificações
+            function renderNotifications() {
+                notificationList.innerHTML = '';
+                
+                if (notifications.length === 0) {
+                    const emptyItem = document.createElement('li');
+                    emptyItem.className = 'notification-item';
+                    emptyItem.textContent = 'Não há notificações.';
+                    notificationList.appendChild(emptyItem);
+                    return;
+                }
+                
+                notifications.forEach(notification => {
+                    const item = document.createElement('li');
+                    item.className = 'notification-item';
+                    if (notification.read) item.classList.add('read');
+                    
+                    const title = document.createElement('div');
+                    title.className = 'notification-title';
+                    title.textContent = notification.title;
+                    
+                    const message = document.createElement('div');
+                    message.className = 'notification-message';
+                    message.textContent = notification.message;
+                    
+                    const time = document.createElement('div');
+                    time.className = 'notification-time';
+                    time.textContent = formatDate(new Date(notification.time));
+                    
+                    item.appendChild(title);
+                    item.appendChild(message);
+                    item.appendChild(time);
+                    
+                    item.addEventListener('click', function() {
+                        notification.read = true;
+                        localStorage.setItem('notifications', JSON.stringify(notifications));
+                        item.classList.add('read');
+                        updateNotificationBadge();
+                    });
+                    
+                    notificationList.appendChild(item);
+                });
+            }
+            
+            // Função para atualizar badge de notificações
+            function updateNotificationBadge() {
+                const unreadCount = notifications.filter(n => !n.read).length;
+                
+                if (unreadCount > 0) {
+                    notificationBadge.textContent = unreadCount;
+                    notificationBadge.style.display = 'flex';
+                } else {
+                    notificationBadge.style.display = 'none';
+                }
+            }
+            
+            // Função para formatar data
+            function formatDate(date) {
+                const now = new Date();
+                const diff = now - date;
+                
+                if (diff < 60000) { // menos de 1 minuto
+                    return 'Agora mesmo';
+                } else if (diff < 3600000) { // menos de 1 hora
+                    const minutes = Math.floor(diff / 60000);
+                    return `${minutes} minuto${minutes > 1 ? 's' : ''} atrás`;
+                } else if (diff < 86400000) { // menos de 1 dia
+                    const hours = Math.floor(diff / 3600000);
+                    return `${hours} hora${hours > 1 ? 's' : ''} atrás`;
+                } else {
+                    return date.toLocaleDateString();
+                }
+            }
+        }
+    </script>
 </head>
 <body>
     <header>
+        <h1>Codexp - Blox Fruits</h1>
         <nav>
             <ul>
-                <li><a href="login.html">Login</a></li>
+                <li><a href="login.html" id="login-link">Login</a></li>
+                <li><button id="logout-btn" style="display: none;">Logout</button></li>
+                <li><span id="user-display" style="display: none;"></span></li>
                 <li><a href="cadastro.html">Cadastrar Códigos</a></li>
             </ul>
         </nav>
-        <h1>Página Principal</h1>
     </header>
     <main>
+        <!-- Banner de instalação do PWA -->
+        <div id="install-banner" class="install-banner">
+            <p>Instale o Codexp em seu dispositivo para acesso rápido e offline!</p>
+            <button id="install-button">Instalar</button>
+            <button id="close-install-banner" onclick="document.getElementById('install-banner').style.display='none'">×</button>
+        </div>
+
         <section class="menu">
-            <a href="login.html">
+            <a href="login.html" id="login-menu-link">
                 <img src="https://img.icons8.com/ios-filled/50/000000/login-rounded-right.png" alt="Login">
                 Login
             </a>
@@ -31,21 +250,113 @@
                 Blox Fruits Codes
             </a>
         </section>
-        <section>
+        
+        <div class="content-container">
+            <section class="hero">
             <h2>Bem-vindo ao Codexp</h2>
             <p>Armazene e gerencie seus códigos do Blox Fruits de forma fácil e rápida.</p>
+                <div class="hero-image">
+                    <img src="image.png" alt="Blox Fruits" style="max-width: 100%; height: auto; border-radius: 10px; margin: 20px 0;">
+                </div>
         </section>
-        <section>
+            
+            <section class="features-section">
             <h2>Funcionalidades</h2>
-            <ul>
-                <li>Cadastro de códigos</li>
-                <li>Login seguro</li>
-                <li>Interface amigável</li>
-            </ul>
+                <div class="features">
+                    <div class="feature-card">
+                        <img src="https://img.icons8.com/ios-filled/50/000000/add-file.png" alt="Cadastro de códigos">
+                        <h3>Cadastro de códigos</h3>
+                        <p>Adicione, edite e remova códigos do Blox Fruits facilmente.</p>
+                    </div>
+                    <div class="feature-card">
+                        <img src="https://img.icons8.com/ios-filled/50/000000/login-rounded-right.png" alt="Login seguro">
+                        <h3>Login seguro</h3>
+                        <p>Crie sua conta e mantenha seus códigos salvos com segurança.</p>
+                    </div>
+                    <div class="feature-card">
+                        <img src="https://img.icons8.com/ios-filled/50/000000/external-link.png" alt="Interface amigável">
+                        <h3>Interface amigável</h3>
+                        <p>Design intuitivo e responsivo para facilitar o uso em qualquer dispositivo.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Nova seção de estatísticas -->
+            <section class="stats-container fade-in">
+                <h2>Suas Estatísticas</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total de Códigos</div>
+                        <div class="stat-value" id="total-codes">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Códigos Ativos</div>
+                        <div class="stat-value" id="active-codes">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Códigos Expirados</div>
+                        <div class="stat-value" id="expired-codes">0</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px;">Tipos de Recompensas</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Beli</div>
+                        <div class="stat-value" id="beli-rewards">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">XP</div>
+                        <div class="stat-value" id="xp-rewards">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Gems</div>
+                        <div class="stat-value" id="gem-rewards">0</div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="updates-section">
+                <h2>Últimas Atualizações</h2>
+                <div class="updates">
+                    <p>Agora você pode instalar o Codexp como um aplicativo em seu dispositivo!</p>
+                    <p>Novo modo escuro para uso noturno e maior conforto visual.</p>
+                    <p>Sistema de notificações para manter você informado sobre novidades.</p>
+                    <p>Estatísticas para acompanhar seus códigos e recompensas.</p>
+                    <p>Acesse seus códigos mesmo sem conexão com a internet.</p>
+                    <p>Interface melhorada para uma melhor experiência de usuário.</p>
+                </div>
         </section>
+        </div>
     </main>
+    
+    <!-- Botão de alternar tema -->
+    <button class="theme-toggle" id="theme-toggle">
+        <i class="fas fa-sun sun"></i>
+        <i class="fas fa-moon moon"></i>
+    </button>
+    
+    <!-- Botão de notificações -->
+    <button class="notification-toggle" id="notification-toggle">
+        <i class="fas fa-bell"></i>
+        <span class="notification-badge" id="notification-badge">2</span>
+    </button>
+    
+    <!-- Centro de notificações -->
+    <div class="notification-center" id="notification-center">
+        <div class="notification-header">
+            <h3>Notificações</h3>
+            <button class="notification-close" id="notification-close">×</button>
+        </div>
+        <ul class="notification-list" id="notification-list">
+            <!-- Notificações serão inseridas aqui -->
+        </ul>
+    </div>
+    
     <footer>
         <p>&copy; 2023 Codexp. Todos os direitos reservados.</p>
     </footer>
+    <!-- Script PWA -->
+    <script src="pwa.js"></script>
 </body>
 </html>

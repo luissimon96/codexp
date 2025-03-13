@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Ícones PWA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px 0;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #1a2a6c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0f1a4f;
+        }
+        .icon-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .icon-item {
+            text-align: center;
+        }
+        .icon-item a {
+            display: block;
+            margin-top: 5px;
+            color: #1a2a6c;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gerador de Ícones PWA para Codexp</h1>
+    <p>Use esta ferramenta para gerar ícones básicos para o PWA do Codexp.</p>
+    
+    <div class="controls">
+        <label for="text">Texto do ícone:</label>
+        <input type="text" id="text" value="BF" placeholder="Texto para o ícone">
+        
+        <label for="bg-color">Cor de fundo:</label>
+        <input type="color" id="bg-color" value="#1a2a6c">
+        
+        <label for="text-color">Cor do texto:</label>
+        <input type="color" id="text-color" value="#fdbb2d">
+        
+        <button id="generate">Gerar Ícones</button>
+    </div>
+    
+    <div class="icon-container" id="icons"></div>
+    
+    <script>
+        document.getElementById('generate').addEventListener('click', generateIcons);
+        
+        function generateIcons() {
+            const text = document.getElementById('text').value || 'BF';
+            const bgColor = document.getElementById('bg-color').value;
+            const textColor = document.getElementById('text-color').value;
+            const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
+            const iconContainer = document.getElementById('icons');
+            
+            // Limpar ícones anteriores
+            iconContainer.innerHTML = '';
+            
+            iconSizes.forEach(size => {
+                // Criar canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                
+                // Desenhar fundo
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(0, 0, size, size);
+                
+                // Desenhar texto
+                ctx.fillStyle = textColor;
+                ctx.font = `bold ${size * 0.5}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, size / 2, size / 2);
+                
+                // Adicionar ao container
+                const iconItem = document.createElement('div');
+                iconItem.className = 'icon-item';
+                
+                iconItem.appendChild(canvas);
+                
+                // Adicionar link para download
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = `icon-${size}x${size}.png`;
+                link.textContent = `${size}x${size} - Baixar`;
+                iconItem.appendChild(link);
+                
+                iconContainer.appendChild(iconItem);
+            });
+            
+            // Instruções
+            const instructions = document.createElement('p');
+            instructions.innerHTML = 'Clique nos links para baixar cada ícone. Depois, salve-os na pasta <code>icons/</code> do seu projeto.';
+            iconContainer.appendChild(instructions);
+        }
+    </script>
+</body>
+</html> 

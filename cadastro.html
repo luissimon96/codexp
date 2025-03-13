@@ -1,25 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastrar Códigos</title>
+    <title>Cadastrar Códigos - Codexp</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Referências PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a2a6c">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="codes.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.querySelector('form');
             const codeTable = document.getElementById('code-table').getElementsByTagName('tbody')[0];
             const loggedIn = localStorage.getItem('loggedIn') === 'true';
+            const currentUser = localStorage.getItem('currentUser');
+            const userDisplay = document.getElementById('user-display');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            // Exibir informações do usuário logado
+            if (loggedIn && currentUser) {
+                userDisplay.textContent = `Olá, ${currentUser}!`;
+                userDisplay.style.display = 'inline-block';
+                logoutBtn.style.display = 'inline-block';
+            }
+            
+            // Função de logout
+            logoutBtn.addEventListener('click', function() {
+                localStorage.removeItem('loggedIn');
+                localStorage.removeItem('currentUser');
+                alert('Logout realizado com sucesso!');
+                window.location.href = 'index.html';
+            });
+            
+            // Carregar códigos salvos do localStorage
+            let savedCodes = JSON.parse(localStorage.getItem('savedCodes')) || [];
+            
+            // Função para salvar códigos no localStorage
+            function saveCodesToLocalStorage() {
+                const tableRows = codeTable.getElementsByTagName('tr');
+                const codes = [];
+                
+                for (let i = 0; i < tableRows.length; i++) {
+                    const cells = tableRows[i].getElementsByTagName('td');
+                    codes.push({
+                        code: cells[0].textContent,
+                        reward: cells[1].textContent,
+                        dateAdded: cells[2].textContent,
+                        expiry: cells[3].textContent
+                    });
+                }
+                
+                localStorage.setItem('savedCodes', JSON.stringify(codes));
+            }
 
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
                 const codeInput = document.getElementById('code');
                 const rewardInput = document.getElementById('reward');
+                const expiryInput = document.getElementById('expiry');
                 const dateAdded = new Date().toLocaleDateString();
 
                 const code = codeInput.value.trim();
                 const reward = rewardInput.value.trim();
+                const expiry = expiryInput.value.trim() || "Sem expiração";
 
                 if (code && reward) {
                     const row = codeTable.insertRow();
@@ -28,15 +75,26 @@
                     const cell3 = row.insertCell(2);
                     const cell4 = row.insertCell(3);
                     const cell5 = row.insertCell(4);
+                    const cell6 = row.insertCell(5);
 
                     cell1.textContent = code;
                     cell2.textContent = reward;
                     cell3.textContent = dateAdded;
-                    cell4.innerHTML = loggedIn ? '<button class="edit">Editar</button>' : '';
-                    cell5.innerHTML = loggedIn ? '<button class="delete">Deletar</button>' : '';
+                    cell4.textContent = expiry;
+                    cell5.innerHTML = loggedIn ? '<button class="edit">Editar</button>' : '';
+                    cell6.innerHTML = loggedIn ? '<button class="delete">Deletar</button>' : '';
+                    
+                    // Adicionar classe para códigos expirados
+                    if (expiry.toLowerCase().includes('expirado')) {
+                        row.classList.add('expired');
+                    }
 
                     codeInput.value = '';
                     rewardInput.value = '';
+                    expiryInput.value = '';
+                    
+                    // Salvar no localStorage após adicionar
+                    saveCodesToLocalStorage();
                 }
             });
 
@@ -49,48 +107,167 @@
                 if (event.target.classList.contains('delete')) {
                     const row = event.target.parentElement.parentElement;
                     codeTable.deleteRow(row.rowIndex - 1);
+                    // Salvar no localStorage após deletar
+                    saveCodesToLocalStorage();
                 } else if (event.target.classList.contains('edit')) {
                     const row = event.target.parentElement.parentElement;
                     const codeCell = row.cells[0];
                     const rewardCell = row.cells[1];
+                    const expiryCell = row.cells[3];
+                    
                     const newCode = prompt('Edite o código:', codeCell.textContent);
                     const newReward = prompt('Edite a recompensa:', rewardCell.textContent);
+                    const newExpiry = prompt('Edite a expiração (Sem expiração/Expirado/Data):', expiryCell.textContent);
+                    
                     if (newCode && newReward) {
                         codeCell.textContent = newCode;
                         rewardCell.textContent = newReward;
+                        
+                        if (newExpiry) {
+                            expiryCell.textContent = newExpiry;
+                            
+                            // Atualizar classe para códigos expirados
+                            if (newExpiry.toLowerCase().includes('expirado')) {
+                                row.classList.add('expired');
+                            } else {
+                                row.classList.remove('expired');
+                            }
+                        }
+                        
+                        // Salvar no localStorage após editar
+                        saveCodesToLocalStorage();
                     }
                 }
             });
-
-            // Import codes from the codes.js file
-            codes.forEach(({ code, reward }) => {
-                const row = codeTable.insertRow();
-                const cell1 = row.insertCell(0);
-                const cell2 = row.insertCell(1);
-                const cell3 = row.insertCell(2);
-                const cell4 = row.insertCell(3);
-                const cell5 = row.insertCell(4);
-
-                cell1.textContent = code;
-                cell2.textContent = reward;
-                cell3.textContent = new Date().toLocaleDateString();
-                cell4.innerHTML = loggedIn ? '<button class="edit">Editar</button>' : '';
-                cell5.innerHTML = loggedIn ? '<button class="delete">Deletar</button>' : '';
+            
+            // Adicionar filtro para códigos
+            const filterInput = document.getElementById('filter');
+            filterInput.addEventListener('input', function() {
+                const filterValue = this.value.toLowerCase();
+                const rows = codeTable.getElementsByTagName('tr');
+                
+                for (let i = 0; i < rows.length; i++) {
+                    const codeCell = rows[i].getElementsByTagName('td')[0];
+                    const rewardCell = rows[i].getElementsByTagName('td')[1];
+                    
+                    if (codeCell && rewardCell) {
+                        const codeText = codeCell.textContent.toLowerCase();
+                        const rewardText = rewardCell.textContent.toLowerCase();
+                        
+                        if (codeText.includes(filterValue) || rewardText.includes(filterValue)) {
+                            rows[i].style.display = '';
+                        } else {
+                            rows[i].style.display = 'none';
+                        }
+                    }
+                }
             });
+            
+            // Adicionar opção para mostrar/ocultar códigos expirados
+            const toggleExpiredBtn = document.getElementById('toggle-expired');
+            let showExpired = true;
+            
+            toggleExpiredBtn.addEventListener('click', function() {
+                showExpired = !showExpired;
+                const expiredRows = codeTable.getElementsByClassName('expired');
+                
+                for (let i = 0; i < expiredRows.length; i++) {
+                    expiredRows[i].style.display = showExpired ? '' : 'none';
+                }
+                
+                toggleExpiredBtn.textContent = showExpired ? 'Ocultar Códigos Expirados' : 'Mostrar Códigos Expirados';
+            });
+
+            // Carregar códigos salvos primeiro
+            if (savedCodes.length > 0) {
+                savedCodes.forEach(({ code, reward, dateAdded, expiry }) => {
+                    const row = codeTable.insertRow();
+                    const cell1 = row.insertCell(0);
+                    const cell2 = row.insertCell(1);
+                    const cell3 = row.insertCell(2);
+                    const cell4 = row.insertCell(3);
+                    const cell5 = row.insertCell(4);
+                    const cell6 = row.insertCell(5);
+
+                    cell1.textContent = code;
+                    cell2.textContent = reward;
+                    cell3.textContent = dateAdded || new Date().toLocaleDateString();
+                    cell4.textContent = expiry || "Sem expiração";
+                    cell5.innerHTML = loggedIn ? '<button class="edit">Editar</button>' : '';
+                    cell6.innerHTML = loggedIn ? '<button class="delete">Deletar</button>' : '';
+                    
+                    // Adicionar classe para códigos expirados
+                    if (expiry && expiry.toLowerCase().includes('expirado')) {
+                        row.classList.add('expired');
+                    }
+                });
+            } else {
+                // Importar códigos do arquivo codes.js apenas se não houver códigos salvos
+                codes.forEach(({ code, reward, expiry }) => {
+                    const row = codeTable.insertRow();
+                    const cell1 = row.insertCell(0);
+                    const cell2 = row.insertCell(1);
+                    const cell3 = row.insertCell(2);
+                    const cell4 = row.insertCell(3);
+                    const cell5 = row.insertCell(4);
+                    const cell6 = row.insertCell(5);
+
+                    cell1.textContent = code;
+                    cell2.textContent = reward;
+                    cell3.textContent = new Date().toLocaleDateString();
+                    cell4.textContent = expiry || "Sem expiração";
+                    cell5.innerHTML = loggedIn ? '<button class="edit">Editar</button>' : '';
+                    cell6.innerHTML = loggedIn ? '<button class="delete">Deletar</button>' : '';
+                    
+                    // Adicionar classe para códigos expirados
+                    if (expiry && expiry.toLowerCase().includes('expirado')) {
+                        row.classList.add('expired');
+                    }
+                });
+                // Salvar os códigos iniciais no localStorage
+                saveCodesToLocalStorage();
+            }
+            
+            // Adicionar botão para limpar todos os códigos
+            const clearButton = document.createElement('button');
+            clearButton.textContent = 'Limpar Todos os Códigos';
+            clearButton.classList.add('clear-all');
+            clearButton.addEventListener('click', function() {
+                if (confirm('Tem certeza que deseja limpar todos os códigos?')) {
+                    while (codeTable.firstChild) {
+                        codeTable.removeChild(codeTable.firstChild);
+                    }
+                    localStorage.removeItem('savedCodes');
+                }
+            });
+            
+            // Adicionar o botão apenas para usuários logados
+            if (loggedIn) {
+                document.querySelector('.table-controls').appendChild(clearButton);
+            }
         });
     </script>
 </head>
 <body>
     <header>
+        <h1>Cadastrar Códigos do Blox Fruits</h1>
         <nav>
             <ul>
                 <li><a href="index.html">Página Principal</a></li>
                 <li><a href="login.html">Login</a></li>
+                <li><button id="logout-btn" style="display: none;">Logout</button></li>
+                <li><span id="user-display" style="display: none;"></span></li>
             </ul>
         </nav>
-        <h1>Cadastrar Códigos do Blox Fruits</h1>
     </header>
     <main>
+        <!-- Banner de instalação do PWA -->
+        <div id="install-banner" class="install-banner">
+            <p>Instale o Codexp em seu dispositivo para acesso rápido e offline!</p>
+            <button id="install-button">Instalar</button>
+            <button id="close-install-banner" onclick="document.getElementById('install-banner').style.display='none'">×</button>
+        </div>
+
         <section class="menu">
             <a href="index.html">
                 <img src="https://img.icons8.com/ios-filled/50/000000/home.png" alt="Página Principal">
@@ -105,33 +282,53 @@
                 Blox Fruits Codes
             </a>
         </section>
-        <div style="text-align: center;">
-            <img src="image.png" alt="Descrição da imagem" style="width: 300px; height: auto; margin-bottom: 20px;">
+        <div class="hero-image">
+            <img src="image.png" alt="Blox Fruits" style="max-width: 300px; height: auto; display: block; margin: 0 auto 20px;">
         </div>
-        <form>
-            <label for="code">Código:</label>
-            <input type="text" id="code" name="code" required>
-            <label for="reward">Recompensa(s):</label>
-            <input type="text" id="reward" name="reward" required>
-            <button type="submit">Cadastrar</button>
-        </form>
-        <section>
+        <div class="form-container">
+            <form>
+                <h2>Adicionar Novo Código</h2>
+                <label for="code">Código:</label>
+                <input type="text" id="code" name="code" required>
+                <label for="reward">Recompensa(s):</label>
+                <input type="text" id="reward" name="reward" required>
+                <label for="expiry">Expiração (opcional):</label>
+                <input type="text" id="expiry" name="expiry" placeholder="Sem expiração/Expirado/Data">
+                <button type="submit">Cadastrar</button>
+            </form>
+        </div>
+        <section class="codes-section">
             <h2>Códigos Cadastrados</h2>
-            <table id="code-table">
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Recompensa(s)</th>
-                        <th>Data de Adição</th>
-                        <th>Editar</th>
-                        <th>Deletar</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Códigos cadastrados serão inseridos aqui -->
-                </tbody>
-            </table>
+            <div class="table-controls">
+                <div class="search-box">
+                    <label for="filter">Filtrar códigos:</label>
+                    <input type="text" id="filter" placeholder="Digite para filtrar...">
+                </div>
+                <button id="toggle-expired">Ocultar Códigos Expirados</button>
+            </div>
+            <div class="table-container">
+                <table id="code-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Recompensa(s)</th>
+                            <th>Data de Adição</th>
+                            <th>Expiração</th>
+                            <th>Editar</th>
+                            <th>Deletar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Códigos cadastrados serão inseridos aqui -->
+                    </tbody>
+                </table>
+            </div>
         </section>
     </main>
+    <footer>
+        <p>&copy; 2023 Codexp. Todos os direitos reservados.</p>
+    </footer>
+    <!-- Script PWA -->
+    <script src="pwa.js"></script>
 </body>
 </html>

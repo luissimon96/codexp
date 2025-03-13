@@ -1,41 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - Codexp</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Referências PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a2a6c">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('form');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const toggleFormBtn = document.getElementById('toggle-form');
+            const formTitle = document.getElementById('form-title');
+            
+            // Inicializar usuários no localStorage se não existir
+            if (!localStorage.getItem('users')) {
+                const defaultUsers = [
+                    { username: 'user', password: 'user' }
+                ];
+                localStorage.setItem('users', JSON.stringify(defaultUsers));
+            }
+            
+            // Alternar entre formulários de login e registro
+            toggleFormBtn.addEventListener('click', function() {
+                if (loginForm.style.display === 'none') {
+                    loginForm.style.display = 'flex';
+                    registerForm.style.display = 'none';
+                    toggleFormBtn.textContent = 'Criar nova conta';
+                    formTitle.textContent = 'Login';
+                } else {
+                    loginForm.style.display = 'none';
+                    registerForm.style.display = 'flex';
+                    toggleFormBtn.textContent = 'Já tenho uma conta';
+                    formTitle.textContent = 'Cadastro de Usuário';
+                }
+            });
 
-            form.addEventListener('submit', function(event) {
+            // Processar login
+            loginForm.addEventListener('submit', function(event) {
                 event.preventDefault();
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
+                
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                const user = users.find(u => u.username === username && u.password === password);
 
-                if (username === 'user' && password === 'user') {
+                if (user) {
                     localStorage.setItem('loggedIn', 'true');
-                    alert('Login successful!');
+                    localStorage.setItem('currentUser', username);
+                    alert('Login realizado com sucesso!');
                     window.location.href = 'cadastro.html';
                 } else {
-                    alert('Invalid username or password');
+                    alert('Usuário ou senha inválidos');
                 }
+            });
+            
+            // Processar registro
+            registerForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const newUsername = document.getElementById('new-username').value;
+                const newPassword = document.getElementById('new-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                
+                if (newPassword !== confirmPassword) {
+                    alert('As senhas não coincidem');
+                    return;
+                }
+                
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                
+                // Verificar se o usuário já existe
+                if (users.some(u => u.username === newUsername)) {
+                    alert('Este nome de usuário já está em uso');
+                    return;
+                }
+                
+                // Adicionar novo usuário
+                users.push({ username: newUsername, password: newPassword });
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                alert('Cadastro realizado com sucesso! Faça login para continuar.');
+                
+                // Voltar para o formulário de login
+                loginForm.style.display = 'flex';
+                registerForm.style.display = 'none';
+                toggleFormBtn.textContent = 'Criar nova conta';
+                formTitle.textContent = 'Login';
             });
         });
     </script>
 </head>
 <body>
     <header>
+        <h1 id="form-title">Login</h1>
         <nav>
             <ul>
                 <li><a href="index.html">Página Principal</a></li>
                 <li><a href="cadastro.html">Cadastrar Códigos</a></li>
             </ul>
         </nav>
-        <h1>Login</h1>
     </header>
     <main>
+        <!-- Banner de instalação do PWA -->
+        <div id="install-banner" class="install-banner">
+            <p>Instale o Codexp em seu dispositivo para acesso rápido e offline!</p>
+            <button id="install-button">Instalar</button>
+            <button id="close-install-banner" onclick="document.getElementById('install-banner').style.display='none'">×</button>
+        </div>
+
         <section class="menu">
             <a href="index.html">
                 <img src="https://img.icons8.com/ios-filled/50/000000/home.png" alt="Página Principal">
@@ -50,14 +127,41 @@
                 Blox Fruits Codes
             </a>
         </section>
-        <form>
-            <label for="username">Usuário:</label>
-            <input type="text" id="username" name="username" required>
-            <label for="password">Senha:</label>
-            <input type="password" id="password" name="password" required>
-            <button type="submit">Entrar</button>
-        </form>
-        <a href="index.html">Voltar para a Página Principal</a>
+        
+        <div class="login-container">
+            <form id="login-form">
+                <h2>Acesse sua conta</h2>
+                <label for="username">Usuário:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="password">Senha:</label>
+                <input type="password" id="password" name="password" required>
+                <button type="submit">Entrar</button>
+            </form>
+            
+            <form id="register-form" style="display: none;">
+                <h2>Crie sua conta</h2>
+                <label for="new-username">Novo Usuário:</label>
+                <input type="text" id="new-username" name="new-username" required>
+                <label for="new-password">Nova Senha:</label>
+                <input type="password" id="new-password" name="new-password" required>
+                <label for="confirm-password">Confirmar Senha:</label>
+                <input type="password" id="confirm-password" name="confirm-password" required>
+                <button type="submit">Cadastrar</button>
+            </form>
+            
+            <div class="form-toggle">
+                <button type="button" id="toggle-form">Criar nova conta</button>
+            </div>
+            
+            <div class="back-link">
+                <a href="index.html">Voltar para a Página Principal</a>
+            </div>
+        </div>
     </main>
+    <footer>
+        <p>&copy; 2023 Codexp. Todos os direitos reservados.</p>
+    </footer>
+    <!-- Script PWA -->
+    <script src="pwa.js"></script>
 </body>
 </html>
