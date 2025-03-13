@@ -45,7 +45,7 @@ main {
     background: rgba(255, 255, 255, 0.9);
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    margin-right: 320px; /* Adjust to ensure main content is not covered */
+    margin-right: 320px; /* Ensure main content is not covered */
 }
 
 h1, h2 {
@@ -207,7 +207,7 @@ button.delete:hover {
     padding: 20px;
     border-left: 1px solid #ccc;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-    position: absolute;
+    position: fixed; /* Change to fixed to avoid covering main content */
     top: 0;
     right: 0;
     bottom: 0;
