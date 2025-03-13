@@ -5,63 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastrar Códigos</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="codes.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.querySelector('form');
             const codeTable = document.getElementById('code-table').getElementsByTagName('tbody')[0];
+            const loggedIn = localStorage.getItem('loggedIn') === 'true';
 
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
                 const codeInput = document.getElementById('code');
-                const code = codeInput.value.trim();
+                const rewardInput = document.getElementById('reward');
+                const dateAdded = new Date().toLocaleDateString();
 
-                if (code) {
+                const code = codeInput.value.trim();
+                const reward = rewardInput.value.trim();
+
+                if (code && reward) {
                     const row = codeTable.insertRow();
                     const cell1 = row.insertCell(0);
                     const cell2 = row.insertCell(1);
                     const cell3 = row.insertCell(2);
+                    const cell4 = row.insertCell(3);
+                    const cell5 = row.insertCell(4);
 
                     cell1.textContent = code;
-                    cell2.innerHTML = '<button class="edit">Editar</button>';
-                    cell3.innerHTML = '<button class="delete">Deletar</button>';
+                    cell2.textContent = reward;
+                    cell3.textContent = dateAdded;
+                    cell4.innerHTML = loggedIn ? '<button class="edit">Editar</button>' : '';
+                    cell5.innerHTML = loggedIn ? '<button class="delete">Deletar</button>' : '';
 
                     codeInput.value = '';
+                    rewardInput.value = '';
                 }
             });
 
             codeTable.addEventListener('click', function(event) {
+                if (!loggedIn) {
+                    alert('Você precisa estar logado para editar ou deletar códigos.');
+                    return;
+                }
+
                 if (event.target.classList.contains('delete')) {
                     const row = event.target.parentElement.parentElement;
                     codeTable.deleteRow(row.rowIndex - 1);
                 } else if (event.target.classList.contains('edit')) {
                     const row = event.target.parentElement.parentElement;
                     const codeCell = row.cells[0];
+                    const rewardCell = row.cells[1];
                     const newCode = prompt('Edite o código:', codeCell.textContent);
-                    if (newCode) {
+                    const newReward = prompt('Edite a recompensa:', rewardCell.textContent);
+                    if (newCode && newReward) {
                         codeCell.textContent = newCode;
+                        rewardCell.textContent = newReward;
                     }
                 }
+            });
+
+            // Import codes from the codes.js file
+            codes.forEach(({ code, reward }) => {
+                const row = codeTable.insertRow();
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+                const cell3 = row.insertCell(2);
+                const cell4 = row.insertCell(3);
+                const cell5 = row.insertCell(4);
+
+                cell1.textContent = code;
+                cell2.textContent = reward;
+                cell3.textContent = new Date().toLocaleDateString();
+                cell4.innerHTML = loggedIn ? '<button class="edit">Editar</button>' : '';
+                cell5.innerHTML = loggedIn ? '<button class="delete">Deletar</button>' : '';
             });
         });
     </script>
 </head>
 <body>
     <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Página Principal</a></li>
+                <li><a href="login.html">Login</a></li>
+            </ul>
+        </nav>
         <h1>Cadastrar Códigos do Blox Fruits</h1>
     </header>
     <main>
+        <div style="text-align: center;">
+            <img src="image.png" alt="Descrição da imagem" style="width: 300px; height: auto; margin-bottom: 20px;">
+        </div>
         <form>
             <label for="code">Código:</label>
             <input type="text" id="code" name="code" required>
+            <label for="reward">Recompensa(s):</label>
+            <input type="text" id="reward" name="reward" required>
             <button type="submit">Cadastrar</button>
         </form>
-        <a href="index.html">Voltar para a Página Principal</a>
         <section>
             <h2>Códigos Cadastrados</h2>
             <table id="code-table">
                 <thead>
                     <tr>
                         <th>Código</th>
+                        <th>Recompensa(s)</th>
+                        <th>Data de Adição</th>
                         <th>Editar</th>
                         <th>Deletar</th>
                     </tr>

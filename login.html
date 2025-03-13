@@ -5,9 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link rel="stylesheet" href="styles.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                if (username === 'user' && password === 'user') {
+                    localStorage.setItem('loggedIn', 'true');
+                    alert('Login successful!');
+                    window.location.href = 'cadastro.html';
+                } else {
+                    alert('Invalid username or password');
+                }
+            });
+        });
+    </script>
 </head>
 <body>
     <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Página Principal</a></li>
+                <li><a href="cadastro.html">Cadastrar Códigos</a></li>
+            </ul>
+        </nav>
         <h1>Login</h1>
     </header>
     <main>
