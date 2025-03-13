@@ -200,3 +200,30 @@ button.delete:hover {
         padding: 8px 16px;
     }
 }
+
+.right-side {
+    background-color: #ffffff;
+    padding: 20px;
+    border-left: 1px solid #ccc;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.right-side h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.right-side p {
+    color: #666;
+    line-height: 1.6;
+}
+
+.right-side a {
+    color: #007BFF;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.right-side a:hover {
+    color: #0056b3;
+}
