@@ -123,3 +123,44 @@ button.edit:hover {
 button.delete:hover {
     background-color: #c82333;
 }
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    header nav ul {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    main {
+        margin: 10px;
+        padding: 10px;
+    }
+
+    form {
+        width: 100%;
+    }
+
+    table {
+        font-size: 0.9em;
+    }
+}
+
+@media (max-width: 480px) {
+    header nav ul {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    main {
+        margin: 5px;
+        padding: 5px;
+    }
+
+    form {
+        width: 100%;
+    }
+
+    table {
+        font-size: 0.8em;
+    }
+}
