@@ -1,4 +1,4 @@
-sZbody {
+body {
     font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
@@ -6,6 +6,7 @@ sZbody {
     background-image: url('background.jpg');
     background-size: cover;
     background-position: center;
+    overflow-x: hidden;
 }
 
 header {
