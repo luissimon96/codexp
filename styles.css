@@ -1,4 +1,4 @@
-body {
+sZbody {
     font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
@@ -70,7 +70,7 @@ input {
 }
 
 button {
-    padding: 8px 16px;
+    padding: 10px 20px;
     border: none;
     border-radius: 5px;
     background-color: #007BFF;
@@ -196,6 +196,6 @@ button.delete:hover {
     }
 
     button {
-        padding: 6px 12px; /* Adjusted padding */
+        padding: 8px 16px;
     }
 }
