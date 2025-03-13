@@ -163,4 +163,12 @@ button.delete:hover {
     table {
         font-size: 0.8em;
     }
+
+    th, td {
+        padding: 5px;
+    }
+
+    button {
+        padding: 8px 16px;
+    }
 }
